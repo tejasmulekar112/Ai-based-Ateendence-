@@ -58,6 +58,12 @@ Using Tailwind CSS, we built a responsive dashboard.
 - **Dark Mode:** Implemented using CSS variables and Tailwind's utility classes.
 - **Persistence:** User theme preference is saved to `localStorage`.
 
+### Step 4: Email Notification System
+A robust backend notification system was integrated to keep administrators informed.
+- **Automated Alerts:** Emails are sent for new user registrations and absence events.
+- **Secure Backend:** SMTP logic is handled on the server to protect credentials.
+- **Custom Templates:** Responsive HTML templates for professional notifications.
+
 ---
 
 ## 5. Integration Process
@@ -72,10 +78,11 @@ To make the app available on Android and iOS:
 1.  **Camera Access:** The app requests permission to use the device camera.
 2.  **Model Loading:** AI models are fetched from the `/models` directory.
 3.  **Socket Connection:** The client establishes a persistent connection to the backend server.
-4.  **Data Flow:** 
+4.  **Email Config:** Admin provides SMTP credentials via environment variables.
+5.  **Data Flow:** 
     - User scans face -> Descriptor generated.
     - Descriptor matched -> Attendance event sent to Socket.io.
-    - Server updates state -> Broadcasts to all clients.
+    - Server updates state -> Broadcasts to all clients and triggers email alerts if configured.
 
 ---
 
@@ -87,6 +94,7 @@ To make the app available on Android and iOS:
 | **Tailwind CSS** | Utility-first CSS for rapid, themeable UI design. |
 | **Face-api.js** | Browser-based AI for facial recognition. |
 | **Socket.io** | Real-time, bi-directional communication. |
+| **Nodemailer** | Secure backend email notifications. |
 | **Capacitor** | Cross-platform native app development. |
 | **Lucide Icons** | Consistent and clean iconography. |
 | **Framer Motion** | Smooth UI transitions and animations. |

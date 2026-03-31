@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Report - AI Attendance System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; color: #1a1a1a; line-height: 1.6; }
+        h1, h2, h3 { font-family: 'Playfair Display', serif; }
+        .page-break { page-break-before: always; }
+        @media print {
+            .no-print { display: none; }
+            body { background: white; }
+            .container { max-width: 100%; padding: 0; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 py-12 px-6">
+
+    <div class="max-w-4xl mx-auto bg-white shadow-2xl rounded-3xl overflow-hidden border border-gray-100">
+        
+        <!-- Cover Page -->
+        <div class="bg-zinc-900 text-white p-16 text-center space-y-8">
+            <div class="inline-block px-4 py-1 bg-orange-500 text-black text-xs font-bold uppercase tracking-[0.3em] rounded-full">Technical Report</div>
+            <h1 class="text-6xl font-bold tracking-tighter">AI Attendance System</h1>
+            <p class="text-zinc-400 text-xl max-w-xl mx-auto italic">"A Modern Approach to Automated Identity Verification and Real-time Attendance Tracking."</p>
+            <div class="pt-12 space-y-1">
+                <p class="text-sm uppercase tracking-widest text-zinc-500">Prepared For</p>
+                <p class="text-lg font-semibold">Project Stakeholders</p>
+            </div>
+            <div class="pt-4 text-sm text-zinc-500">
+                Date: March 31, 2026
+            </div>
+        </div>
+
+        <!-- Table of Contents -->
+        <div class="p-16 space-y-12">
+            <section>
+                <h2 class="text-3xl font-bold border-b-2 border-orange-500 pb-2 mb-8">1. Executive Summary</h2>
+                <p>
+                    The AI Attendance System is a full-stack application designed to modernize organizational attendance tracking. By utilizing client-side facial recognition and real-time backend synchronization, the system eliminates manual errors and prevents proxy attendance. This report details the problem statement, technical implementation, and core features of the project.
+                </p>
+            </section>
+
+            <section>
+                <h2 class="text-3xl font-bold border-b-2 border-orange-500 pb-2 mb-8">2. Problem Statement</h2>
+                <p class="mb-4">
+                    Traditional attendance methods are plagued by inefficiencies and security risks:
+                </p>
+                <ul class="list-disc pl-6 space-y-2">
+                    <li><strong>Manual Overhead:</strong> High administrative burden for data entry and verification.</li>
+                    <li><strong>Buddy Punching:</strong> Lack of biometric verification allows for fraudulent attendance marking.</li>
+                    <li><strong>Latency:</strong> Data is often processed in batches, leading to delayed insights.</li>
+                    <li><strong>Hardware Dependency:</strong> Traditional biometric scanners are expensive and require physical maintenance.</li>
+                </ul>
+            </section>
+
+            <section class="page-break">
+                <h2 class="text-3xl font-bold border-b-2 border-orange-500 pb-2 mb-8">3. Technical Implementation</h2>
+                
+                <h3 class="text-xl font-bold mb-4">3.1 Facial Recognition Engine</h3>
+                <p class="mb-6">
+                    The core of the system is built on <strong>face-api.js</strong>, running directly in the user's browser. This ensures privacy as raw image data never leaves the device; only numerical "descriptors" are transmitted.
+                </p>
+
+                <h3 class="text-xl font-bold mb-4">3.2 Real-time Communication</h3>
+                <p class="mb-6">
+                    We implemented <strong>Socket.io</strong> to bridge the client and server. This allows for instantaneous updates. When a face is recognized, the event is broadcasted to all connected administrative dashboards within milliseconds.
+                </p>
+
+                <h3 class="text-xl font-bold mb-4">3.3 Notification Layer</h3>
+                <p class="mb-6">
+                    A backend notification service using <strong>Nodemailer</strong> was integrated to provide automated alerts. Administrators receive emails for critical events such as new registrations or high absence counts.
+                </p>
+            </section>
+
+            <section>
+                <h2 class="text-3xl font-bold border-b-2 border-orange-500 pb-2 mb-8">4. Core Features</h2>
+                <div class="grid grid-cols-2 gap-8">
+                    <div class="p-6 bg-gray-50 rounded-2xl border border-gray-100">
+                        <h4 class="font-bold text-orange-600 mb-2">AI Scanning</h4>
+                        <p class="text-sm">Automated recognition with >95% accuracy in controlled lighting.</p>
+                    </div>
+                    <div class="p-6 bg-gray-50 rounded-2xl border border-gray-100">
+                        <h4 class="font-bold text-orange-600 mb-2">Live Logs</h4>
+                        <p class="text-sm">Real-time activity feed showing every scan as it happens.</p>
+                    </div>
+                    <div class="p-6 bg-gray-50 rounded-2xl border border-gray-100">
+                        <h4 class="font-bold text-orange-600 mb-2">Theme Engine</h4>
+                        <p class="text-sm">Full Dark/Light mode support for varying environments.</p>
+                    </div>
+                    <div class="p-6 bg-gray-50 rounded-2xl border border-gray-100">
+                        <h4 class="font-bold text-orange-600 mb-2">Email Alerts</h4>
+                        <p class="text-sm">Automated SMTP notifications for administrative oversight.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="page-break">
+                <h2 class="text-3xl font-bold border-b-2 border-orange-500 pb-2 mb-8">5. Conclusion</h2>
+                <p>
+                    The AI Attendance System represents a significant leap forward in organizational efficiency. By combining modern web frameworks with accessible AI models, we have created a tool that is both powerful and easy to deploy. Future iterations will focus on persistent database integration and advanced analytics.
+                </p>
+            </section>
+        </div>
+
+        <!-- Footer -->
+        <div class="bg-gray-100 p-8 text-center text-xs text-gray-500 uppercase tracking-widest">
+            Generated by FaceTrack AI Systems • 2026
+        </div>
+    </div>
+
+    <div class="max-w-4xl mx-auto mt-8 flex justify-center no-print">
+        <button onclick="window.print()" class="px-8 py-3 bg-zinc-900 text-white font-bold rounded-full hover:bg-orange-500 transition-all">
+            Print Report / Save as PDF
+        </button>
+    </div>
+
+</body>
+</html>

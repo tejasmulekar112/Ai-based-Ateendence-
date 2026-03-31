@@ -1,17 +1,112 @@
 import { useState, useEffect, useRef } from 'react';
-import { Camera, UserPlus, ClipboardList, CheckCircle2, AlertCircle, Loader2, Download, Sun, Moon } from 'lucide-react';
+import { Camera, UserPlus, ClipboardList, CheckCircle2, AlertCircle, Loader2, Download, Sun, Moon, FileText } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { loadModels, getFaceDescriptor } from './lib/faceApi';
 import { User, AttendanceRecord } from './types';
 import { format } from 'date-fns';
 import * as faceapi from 'face-api.js';
 import { io } from 'socket.io-client';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import Markdown from 'react-markdown';
 
 const socket = io();
 
+const DOCUMENTATION_CONTENT = `# AI Attendance System - Project Documentation
+
+## 1. Introduction
+The AI Attendance System is a modern, face-recognition-based application designed to automate the process of tracking attendance. By leveraging computer vision and real-time communication, it provides a seamless experience for both administrators and users.
+
+---
+
+## 2. Problem Statement
+Traditional attendance systems often rely on manual entry, physical ID cards, or fingerprint scanners. These methods face several challenges:
+- **Manual Errors:** Human error in recording or data entry.
+- **Proxy Attendance:** Users marking attendance for others (buddy punching).
+- **Inefficiency:** Long queues and slow processing times.
+- **Hygiene Concerns:** Physical contact with shared devices.
+
+**Our Solution:** A touchless, automated system that uses facial recognition to verify identity and record attendance instantly.
+
+---
+
+## 3. Implementation Plan
+The project was planned with a modular architecture to ensure scalability and cross-platform compatibility.
+
+### Key Objectives:
+1.  **Facial Recognition:** Implement a robust client-side face detection and recognition engine.
+2.  **Real-time Sync:** Ensure attendance logs are updated instantly across all connected devices.
+3.  **Cross-Platform:** Support Web, PWA, and Native Mobile (Android/iOS).
+4.  **User Experience:** Provide a clean, theme-aware (Dark/Light) interface.
+
+### Technology Stack:
+- **Frontend:** React.js, Vite, Tailwind CSS.
+- **Animations:** Framer Motion (Motion).
+- **Icons:** Lucide React.
+- **Face AI:** \`face-api.js\`.
+- **Real-time:** Socket.io.
+- **Mobile Wrapper:** Capacitor.
+- **Backend:** Node.js, Express.
+
+---
+
+## 4. Actual Implementation Steps
+
+### Step 1: Face Recognition Engine
+We integrated \`face-api.js\` to handle face detection and feature extraction.
+- **Models:** Loaded pre-trained models for face detection (SSD Mobilenet V1) and face recognition.
+- **Registration:** Users "register" by capturing their face. The system extracts a "descriptor" and saves it.
+- **Scanning:** The system compares the live camera feed descriptor against the stored database.
+
+### Step 2: Real-time Backend
+A Node.js server with Socket.io was implemented to handle data synchronization.
+- **Events:** The server listens for \`attendance-marked\` and \`user-registered\` events.
+- **Broadcasting:** When a record is updated, the server broadcasts the change to all connected clients.
+
+---
+
+## 5. Integration Process
+
+### PWA and Mobile Integration
+1.  **Manifest:** Created a \`manifest.json\` for PWA support.
+2.  **Capacitor:** Initialized Capacitor to wrap the web app into native containers.
+3.  **Service Workers:** Implemented a service worker for offline caching.
+
+### Integration Flow:
+1.  **Camera Access:** The app requests permission to use the device camera.
+2.  **Model Loading:** AI models are fetched from the \`/models\` directory.
+3.  **Socket Connection:** The client establishes a persistent connection to the backend.
+
+---
+
+## 6. Services and Tools Used
+
+| Tool/Service | Purpose |
+| :--- | :--- |
+| **React & Vite** | Core framework and fast development build tool. |
+| **Tailwind CSS** | Utility-first CSS for rapid, themeable UI design. |
+| **Face-api.js** | Browser-based AI for facial recognition. |
+| **Socket.io** | Real-time, bi-directional communication. |
+| **Capacitor** | Cross-platform native app development. |
+| **Lucide Icons** | Consistent and clean iconography. |
+| **Framer Motion** | Smooth UI transitions and animations. |
+
+---
+
+## 7. How to Use the System
+
+1.  **Registration:** Navigate to the **Register** tab, enter your name, and click **Scan Face**.
+2.  **Marking Attendance:** Navigate to the **Scan** tab and ensure your face is visible.
+3.  **Viewing History:** Go to the **History** tab to view live logs and daily summaries.
+
+---
+
+## 8. Conclusion
+The AI Attendance System successfully combines cutting-edge AI with real-time web technologies to provide a robust solution for modern attendance tracking.`;
+
 export default function App() {
   const [isModelsLoaded, setIsModelsLoaded] = useState(false);
-  const [activeTab, setActiveTab] = useState<'attendance' | 'register' | 'history'>('attendance');
+  const [activeTab, setActiveTab] = useState<'attendance' | 'register' | 'history' | 'docs'>('attendance');
   const [historyView, setHistoryView] = useState<'logs' | 'summary'>('logs');
   const [users, setUsers] = useState<User[]>([]);
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
@@ -251,6 +346,41 @@ export default function App() {
     setTimeout(() => setScanResult(null), 3000);
   };
 
+  const exportToPDF = () => {
+    if (attendance.length === 0) {
+      setScanResult({ success: false, message: 'No records to export.' });
+      setTimeout(() => setScanResult(null), 3000);
+      return;
+    }
+
+    const doc = new jsPDF();
+    const tableColumn = ["User Name", "User ID", "Date", "Time", "Status", "Confidence"];
+    const tableRows = attendance.map(record => [
+      record.userName,
+      record.userId,
+      format(new Date(record.timestamp), 'yyyy-MM-dd'),
+      format(new Date(record.timestamp), 'HH:mm:ss'),
+      record.status,
+      record.confidence ? `${record.confidence}%` : '-'
+    ]);
+
+    doc.text("Attendance Report", 14, 15);
+    doc.setFontSize(10);
+    doc.text(`Generated on: ${format(new Date(), 'PPP p')}`, 14, 22);
+
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 30,
+      theme: 'grid',
+      headStyles: { fillColor: [249, 115, 22] }, // orange-500
+    });
+
+    doc.save(`attendance_report_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+    setScanResult({ success: true, message: 'Exporting PDF...' });
+    setTimeout(() => setScanResult(null), 3000);
+  };
+
   const getDailySummary = () => {
     const today = new Date().toDateString();
     return users.map(user => {
@@ -414,6 +544,7 @@ export default function App() {
             { id: 'attendance', icon: Camera, label: 'Scan' },
             { id: 'register', icon: UserPlus, label: 'Register' },
             { id: 'history', icon: ClipboardList, label: 'History' },
+            { id: 'docs', icon: FileText, label: 'Docs' },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -674,6 +805,13 @@ export default function App() {
                   >
                     <Download className="w-4 h-4" />
                     Export CSV
+                  </button>
+                  <button 
+                    onClick={exportToPDF}
+                    className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-black rounded-xl text-xs font-bold uppercase tracking-widest transition-all shadow-lg shadow-orange-500/20"
+                  >
+                    <Download className="w-4 h-4" />
+                    Export PDF
                   </button>
                   <div className={`flex items-center gap-4 p-1 rounded-2xl border transition-colors duration-300 ${
                     theme === 'dark' ? 'bg-zinc-900/50 border-zinc-800' : 'bg-zinc-100 border-zinc-200'
