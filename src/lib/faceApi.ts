@@ -7,13 +7,12 @@ export const loadModels = async () => {
     faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
     faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
     faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
-    faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
   ]);
 };
 
 export const getFaceDescriptor = async (image: HTMLVideoElement | HTMLImageElement) => {
   const detection = await faceapi
-    .detectSingleFace(image)
+    .detectSingleFace(image, new faceapi.TinyFaceDetectorOptions({ inputSize: 160, scoreThreshold: 0.5 }))
     .withFaceLandmarks()
     .withFaceDescriptor();
   

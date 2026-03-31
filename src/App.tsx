@@ -74,8 +74,12 @@ export default function App() {
   const handleRegister = async () => {
     if (!newName || !videoRef.current) return;
     setIsRegistering(true);
+    setScanResult(null);
     
     try {
+      // Small delay to ensure camera frame is stable
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       const descriptor = await getFaceDescriptor(videoRef.current);
       if (descriptor) {
         const newUser: User = {
@@ -88,13 +92,15 @@ export default function App() {
         setNewName('');
         setScanResult({ success: true, message: `Successfully registered ${newUser.name}` });
       } else {
-        setScanResult({ success: false, message: 'No face detected. Please try again.' });
+        setScanResult({ success: false, message: 'No face detected. Please ensure your face is clearly visible and try again.' });
       }
     } catch (error) {
-      setScanResult({ success: false, message: 'Registration failed.' });
+      console.error('Registration error:', error);
+      setScanResult({ success: false, message: 'Registration failed. Please try again.' });
     } finally {
       setIsRegistering(false);
-      setTimeout(() => setScanResult(null), 3000);
+      // Keep success message longer, error message shorter
+      setTimeout(() => setScanResult(null), 4000);
     }
   };
 
