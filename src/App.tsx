@@ -121,6 +121,7 @@ export default function App() {
   const [newName, setNewName] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
   const [registrationStep, setRegistrationStep] = useState<'input' | 'photo'>('input');
+  const [isVideoMounted, setIsVideoMounted] = useState(false);
   const isStartingCamera = useRef(false);
   const [tempDescriptor, setTempDescriptor] = useState<number[] | null>(null);
   const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
@@ -136,6 +137,7 @@ export default function App() {
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
   useEffect(() => {
     if (theme === 'dark') {
@@ -219,16 +221,14 @@ export default function App() {
     stopCamera();
 
     try {
-      // Wait a bit for the video element to be available in the DOM
-      // especially during tab transitions with AnimatePresence
-      let attempts = 0;
-      while (!videoRef.current && attempts < 20) {
-        await new Promise(resolve => setTimeout(resolve, 100));
-        attempts++;
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setCameraError('Your browser does not support camera access. Please use a modern browser like Chrome or Firefox.');
+        isStartingCamera.current = false;
+        return;
       }
 
       if (!videoRef.current) {
-        console.error('Video ref not available after multiple attempts');
+        console.error('Video ref not available in startCamera');
         isStartingCamera.current = false;
         return;
       }
@@ -250,22 +250,40 @@ export default function App() {
       for (const constraint of constraints) {
         try {
           const stream = await navigator.mediaDevices.getUserMedia(constraint);
+          
+          // Check if we still need the camera for this specific tab/step
+          if (!isVideoMounted || (activeTab !== 'attendance' && activeTab !== 'register')) {
+            stream.getTracks().forEach(track => track.stop());
+            isStartingCamera.current = false;
+            return;
+          }
+
+          streamRef.current = stream;
+          
           if (videoRef.current) {
             videoRef.current.srcObject = stream;
+            // Ensure video starts playing
+            try {
+              await videoRef.current.play();
+            } catch (playError) {
+              console.warn('Video play failed, might need user interaction:', playError);
+            }
             isStartingCamera.current = false;
             return; // Success!
+          } else {
+            // Video ref lost while waiting for getUserMedia, clean up
+            stream.getTracks().forEach(track => track.stop());
+            streamRef.current = null;
           }
         } catch (error: any) {
           lastError = error;
           console.warn('Camera constraint failed, trying next...', constraint, error);
-          // If it's a permission error, don't bother trying other constraints
           if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
             break;
           }
         }
       }
 
-      // If we reach here, all attempts failed
       if (lastError) {
         console.error('Final camera access error:', lastError);
         if (lastError.name === 'NotAllowedError' || lastError.name === 'PermissionDeniedError') {
@@ -282,9 +300,11 @@ export default function App() {
   };
 
   const stopCamera = () => {
-    if (videoRef.current && videoRef.current.srcObject) {
-      const stream = videoRef.current.srcObject as MediaStream;
-      stream.getTracks().forEach(track => track.stop());
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    if (videoRef.current) {
       videoRef.current.srcObject = null;
     }
   };
@@ -429,7 +449,9 @@ export default function App() {
   };
 
   useEffect(() => {
-    if (isModelsLoaded && (activeTab === 'attendance' || activeTab === 'register')) {
+    const shouldBeRunning = isModelsLoaded && isVideoMounted && (activeTab === 'attendance' || activeTab === 'register');
+    
+    if (shouldBeRunning) {
       startCamera();
     } else {
       stopCamera();
@@ -442,7 +464,7 @@ export default function App() {
     }
     
     return () => stopCamera();
-  }, [activeTab, isModelsLoaded, registrationStep]);
+  }, [activeTab, isModelsLoaded, registrationStep, isVideoMounted]);
 
   const handleRegister = async () => {
     if (!newName || !videoRef.current) return;
@@ -829,7 +851,10 @@ export default function App() {
                     </div>
                   ) : (
                     <video
-                      ref={videoRef}
+                      ref={(el) => {
+                        (videoRef as any).current = el;
+                        setIsVideoMounted(!!el);
+                      }}
                       autoPlay
                       muted
                       playsInline
@@ -954,7 +979,10 @@ export default function App() {
                         </div>
                       ) : (
                         <video
-                          ref={videoRef}
+                          ref={(el) => {
+                            (videoRef as any).current = el;
+                            setIsVideoMounted(!!el);
+                          }}
                           autoPlay
                           muted
                           playsInline
@@ -1009,7 +1037,10 @@ export default function App() {
                         theme === 'dark' ? 'bg-zinc-900 border-zinc-800' : 'bg-zinc-100 border-zinc-200'
                       }`}>
                         <video
-                          ref={videoRef}
+                          ref={(el) => {
+                            (videoRef as any).current = el;
+                            setIsVideoMounted(!!el);
+                          }}
                           autoPlay
                           muted
                           playsInline
